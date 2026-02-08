@@ -67,22 +67,21 @@ echo "NCNN tools ready: $NCNN_ROOT/bin/onnx2ncnn"
 echo "[4/8] Cloning Kernel/sd-nsfw + exporting ONNX..."
 cd "$NCNN_DIR"
 
-# Ensure git-lfs is available
+# Ensure git-lfs is available using absolute path fallback
+GIT_LFS="/home/devcontainers/ncnn-sd-build/git-lfs-3.5.1/git-lfs"
 if ! command -v git-lfs &> /dev/null; then
-    echo "git-lfs remains missing, attempting direct installation..."
-    wget -q https://github.com/git-lfs/git-lfs/releases/download/v3.5.1/git-lfs-linux-amd64-v3.5.1.tar.gz -O git-lfs.tar.gz
-    tar -xzf git-lfs.tar.gz
-    sudo ./git-lfs-3.5.1/install.sh
-    git lfs install
+    echo "git-lfs remains missing from path, using explicit binary..."
+    $GIT_LFS install
+    export PATH="/home/devcontainers/ncnn-sd-build/git-lfs-3.5.1:$PATH"
 fi
 
 if [ ! -d "sd_nsfw_hf" ]; then
-    git lfs install
+    $GIT_LFS install
     git clone https://huggingface.co/Kernel/sd-nsfw sd_nsfw_hf
 fi
 
 # ... Rest of the script remains ...
-pip3 install --quiet diffusers[torch] onnx optimum[exporters] safetensors torch torchvision
+pip3 install --quiet --break-system-packages diffusers[torch] onnx optimum[exporters] safetensors torch torchvision
 
 if [ ! -d "sd_nsfw_onnx" ]; then
     python3 -c "
